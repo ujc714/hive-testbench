@@ -69,7 +69,7 @@ echo "TPC-DS text data generation complete."
 
 # Create the text/flat tables as external tables. These will be later be converted to ORCFile.
 echo "Loading text data into external tables."
-runcommand "hive -i settings/load-flat.sql -f ddl-tpcds/text/alltables.sql -d DB=tpcds_text_${SCALE} -d LOCATION=${DIR}/${SCALE}"
+runcommand "hive -i settings/load-flat.sql -f ddl-tpcds/text/alltables.sql --hivevar DB=tpcds_text_${SCALE} --hivevar LOCATION=${DIR}/${SCALE}"
 
 # Create the partitioned and bucketed tables.
 if [ "X$FORMAT" = "X" ]; then
@@ -82,10 +82,10 @@ for t in ${FACTS}
 do
 	echo "Optimizing table $t ($i/$total)."
 	COMMAND="hive -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    -d DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} \
-            -d SCALE=${SCALE} \
-	    -d SOURCE=tpcds_text_${SCALE} -d BUCKETS=${BUCKETS} \
-	    -d RETURN_BUCKETS=${RETURN_BUCKETS} -d FILE=${FORMAT}"
+	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} \
+            --hivevar SCALE=${SCALE} \
+	    --hivevar SOURCE=tpcds_text_${SCALE} --hivevar BUCKETS=${BUCKETS} \
+	    --hivevar RETURN_BUCKETS=${RETURN_BUCKETS} --hivevar FILE=${FORMAT}"
 	runcommand "$COMMAND"
 	if [ $? -ne 0 ]; then
 		echo "Command failed, try 'export DEBUG_SCRIPT=ON' and re-running"
@@ -99,9 +99,9 @@ for t in ${DIMS}
 do
 	echo "Optimizing table $t ($i/$total)."
 	COMMAND="hive -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    -d DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} -d SOURCE=tpcds_text_${SCALE} \
-            -d SCALE=${SCALE} \
-	    -d FILE=${FORMAT}"
+	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} --hivevar SOURCE=tpcds_text_${SCALE} \
+            --hivevar SCALE=${SCALE} \
+	    --hivevar FILE=${FORMAT}"
 	runcommand "$COMMAND"
 	if [ $? -ne 0 ]; then
 		echo "Command failed, try 'export DEBUG_SCRIPT=ON' and re-running"
